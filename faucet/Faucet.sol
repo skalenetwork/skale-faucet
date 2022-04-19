@@ -19,7 +19,7 @@ contract Faucet is Ownable {
 
     function retrieve() external {
         require(msg.sender.balance < retrievedAmount, "Invalid receiver balance");
-        uint amount = retrievedAmount - receiver.balance;
-        IEtherbase(etherbaseAddress).partiallyRetrieve(msg.sender, amount);
+        uint amount = retrievedAmount - msg.sender.balance;
+        IEtherbase(etherbaseAddress).partiallyRetrieve(payable(msg.sender), amount);
     }
 }
