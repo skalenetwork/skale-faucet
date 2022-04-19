@@ -9,8 +9,6 @@ from solcx import install_solc
 from eth_account import Account
 from etherbase_predeployed import EtherbaseGenerator
 from etherbase_predeployed.address import ETHERBASE_ADDRESS
-
-
 install_solc(version='latest')
 
 endpoint = os.getenv('ENDPOINT')
@@ -23,12 +21,11 @@ etherbase = w3.eth.contract(
     abi=EtherbaseGenerator().get_abi(),
     address=ETHERBASE_ADDRESS
 )
-print('ABI', EtherbaseGenerator().get_abi())
+
 
 def sign_and_send(tx):
     signed = w3.eth.account.signTransaction(tx, pk)
     tx_hash = w3.eth.sendRawTransaction(signed['rawTransaction'])
-    print(tx_hash.hex())
     sleep(5)
     while True:
         try:
@@ -52,7 +49,7 @@ def deploy_faucet():
     bytecode = contract_interface['bin']
     abi = contract_interface['abi']
     faucet = w3.eth.contract(abi=abi, bytecode=bytecode)
-    tx = faucet.constructor(100).buildTransaction({
+    tx = faucet.constructor(base_amount).buildTransaction({
         'nonce': w3.eth.getTransactionCount(address),
         'gas': 1000000,
         'gasPrice': 100000
@@ -63,9 +60,8 @@ def deploy_faucet():
 
 
 def link_to_etherbase(faucet_addr):
-    etherbase.functions.DEFAULT_ADMIN_ROLE().call()
-    allocator_role = etherbase.functions.ETHER_MANAGER_ROLE().call()
-    tx = etherbase.functions.grantRole(allocator_role, faucet_addr).buildTransaction({
+    ether_manager_role = etherbase.functions.ETHER_MANAGER_ROLE().call()
+    tx = etherbase.functions.grantRole(ether_manager_role, faucet_addr).buildTransaction({
         'nonce': w3.eth.getTransactionCount(address),
         'gas': 1000000,
         'gasPrice': 100000
@@ -76,13 +72,9 @@ def link_to_etherbase(faucet_addr):
 def run():
     faucet = deploy_faucet()
     print(f'Faucet is deployed on {faucet.address}')
-    faucet_data = {
-        'abi': faucet.abi,
-        'address': faucet.address
-    }
-    with open('faucet.json', 'w+') as f:
-        f.write(json.dumps(faucet_data, indent=2))
-        print('Faucet abi & address is written in faucet.json')
+    with open('../package/assets/faucet.json', 'w+') as f:
+        f.write(json.dumps(faucet.abi, indent=2))
+        print('Faucet abi is written in faucet.json')
     link_to_etherbase(faucet.address)
     print(f'Faucet is linked to Etherbase')
 
