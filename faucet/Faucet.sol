@@ -6,16 +6,20 @@ interface IEtherbase {
 }
 
 contract Faucet is Ownable {
-    uint public RetrievedAmount;
+    address constant etherbaseAddress = 0xd2bA3e0000000000000000000000000000000000;
+    uint public retrievedAmount;
 
     constructor(uint _retrievedAmount) public {
-        RetrievedAmount = _retrievedAmount;
+        retrievedAmount = _retrievedAmount;
     }
 
     function setRetrievedAmount(uint _retrievedAmount) onlyOwner external {
-        RetrievedAmount = _retrievedAmount;
+        retrievedAmount = _retrievedAmount;
     }
 
-    function retrieve(address payable receiver) external {
+    function retrieve() external {
+        require(msg.sender.balance < retrievedAmount, "Invalid receiver balance");
+        uint amount = retrievedAmount - receiver.balance;
+        IEtherbase(etherbaseAddress).partiallyRetrieve(msg.sender, amount);
     }
 }
