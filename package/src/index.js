@@ -1,6 +1,6 @@
 /**
  * @license
- * SKALE Filestorage-js
+ * SKALE Faucet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -18,9 +18,11 @@
 
 /**
  * @file index.js
- * @copyright SKALE Labs 2019-Present
+ * @copyright SKALE Labs 2022-Present
  */
 
+const BN = require("bn.js");
+const crypto = require("crypto");
 const Web3 = require('web3');
 const faucetAbi = require('./assets/faucet.json');
 
@@ -34,9 +36,30 @@ class SkaleFaucet {
      * @param {string|object} web3Provider - A URL of SKALE endpoint or one of the Web3 provider classes
      * @param {string} faucetAddress - SkaleFaucet contract address
      */
-    constructor(web3Provider, faucetAddress) {
+    constructor(web3Provider, faucetAddress, difficulty=1) {
         this.web3 = new Web3(web3Provider);
         this.contract = new web3.eth.Contract(faucetAbi, faucetAddress);
+        this.difficulty = new BN(difficulty);
+    }
+
+
+    async _mineFreeGas(tx) {
+        let nonceHash = new BN(this.web3.utils.soliditySha3(nonce).slice(2), 16)
+        let addressHash = new BN(this.web3.utils.soliditySha3(address).slice(2), 16)
+        let nonceAddressXOR = nonceHash.xor(addressHash)
+        let maxNumber = new BN(2).pow(new BN(256)).sub(new BN(1));
+        let divConstant = maxNumber.div(this.difficulty);
+        let candidate;
+        while (true){
+            candidate = new BN(crypto.randomBytes(32).toString('hex'), 16);
+            let candidateHash = new BN(this.web3.utils.soliditySha3(candidate).slice(2), 16);
+            let resultHash = nonceAddressXOR.xor(candidateHash);
+            let externalGas = divConstant.div(resultHash).toNumber();
+            if (externalGas >= gasAmount) {
+                break;
+            }
+        }
+        tx.gasPrice = candidate.toString();
     }
 }
 
