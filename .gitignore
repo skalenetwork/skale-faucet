@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 .idea/
-artifacts.json
+faucet/node_modules
+faucet/package-lock.json

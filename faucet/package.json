@@ -1,0 +1,10 @@
+{
+  "name": "@skalenetwork/skale-faucet",
+  "version": "1.0.0",
+  "homepage": "https://github.com/skalenetwork/skale-faucet#readme",
+  "license": "AGPL-3.0",
+  "author": "SKALE Labs and contributors",
+  "dependencies": {
+    "@openzeppelin/contracts": "4.5.0"
+  }
+}

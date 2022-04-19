@@ -1,0 +1,16 @@
+{
+  "name": "@skalenetwork/skale-faucet",
+  "version": "1.0.0",
+  "description": "SKALE Faucet client",
+  "keywords": [
+    "SKALE",
+    "blockchain",
+    "ethereum"
+  ],
+  "homepage": "https://github.com/skalenetwork/skale-faucet/package#readme",
+  "license": "AGPL-3.0",
+  "author": "SKALE Labs and contributors",
+  "publishConfig": {
+    "access": "public"
+  }
+}
