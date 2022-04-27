@@ -12,8 +12,9 @@ contract Faucet is Ownable {
     uint public totalFuelAmount;
     mapping (address => uint) public lastRetrieve;
 
-    constructor(uint _retrievedAmount) public {
+    constructor(uint _retrievedAmount, uint _totalFuelAmount) public {
         retrievedAmount = _retrievedAmount;
+        totalFuelAmount = _totalFuelAmount;
     }
 
     function setRetrievedAmount(uint _retrievedAmount) onlyOwner external {
@@ -26,7 +27,7 @@ contract Faucet is Ownable {
 
     function retrieve() external {
         require(msg.sender.balance < retrievedAmount, "Invalid receiver balance");
-        require(lastRetrieve[msg.sender] + timeDelta > block.timestamp, "Retrieve could be called once per day");
+        require(lastRetrieve[msg.sender] + timeDelta < block.timestamp, "Retrieve could be called once per day");
         require(retrievedAmount < totalFuelAmount, "Not enough sFuel in Faucet");
         uint amount = retrievedAmount - msg.sender.balance;
         IEtherbase(etherbaseAddress).partiallyRetrieve(payable(msg.sender), amount);

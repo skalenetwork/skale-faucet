@@ -14,6 +14,7 @@ install_solc(version='latest')
 endpoint = os.getenv('ENDPOINT')
 pk = os.getenv('PRIVATE_KEY')
 base_amount = os.getenv('AMOUNT') or 1000000
+total_amount = os.getenv('TOTAL') or 1000000000
 
 address = Account.from_key(pk).address
 w3 = Web3(HTTPProvider(endpoint))
@@ -49,7 +50,7 @@ def deploy_faucet():
     bytecode = contract_interface['bin']
     abi = contract_interface['abi']
     faucet = w3.eth.contract(abi=abi, bytecode=bytecode)
-    tx = faucet.constructor(base_amount).buildTransaction({
+    tx = faucet.constructor(base_amount, total_amount).buildTransaction({
         'nonce': w3.eth.getTransactionCount(address),
         'gas': 1000000,
         'gasPrice': 100000

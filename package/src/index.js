@@ -43,19 +43,20 @@ class SkaleFaucet {
     }
 
     async retrieve(privateKey) {
-        let gas = await this.contract.methods.retrieve().estimateGas();
-        console.log(gas);
+        let data = this.contract.methods.retrieve().encodeABI();
         let account = this.web3.eth.accounts.privateKeyToAccount(privateKey).address;
         let nonce = await this.web3.eth.getTransactionCount(account);
-        let chainId = await this.web3.eth.getChainId();
+        let chainId = await this.web3.eth.net.getId();
         let tx = {
             from: account,
-            data: this.contract.methods.retrieve().encodeABI(),
-            gas: gas,
+            data: data,
             to: this.contract.address,
             nonce: nonce,
             chainId: chainId
         };
+        let gas = await this.contract.methods.retrieve().estimateGas(tx);
+        tx.gas = gas;
+        await this._mineFreeGas(tx);
         let signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
         return await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     }
@@ -65,8 +66,9 @@ class SkaleFaucet {
     }
 
     async _mineFreeGas(tx) {
+        let nonce = this.web3.utils.hexToNumber(tx.nonce);
         let nonceHash = new BN(this.web3.utils.soliditySha3(nonce).slice(2), 16)
-        let addressHash = new BN(this.web3.utils.soliditySha3(address).slice(2), 16)
+        let addressHash = new BN(this.web3.utils.soliditySha3(tx.from).slice(2), 16)
         let nonceAddressXOR = nonceHash.xor(addressHash)
         let maxNumber = new BN(2).pow(new BN(256)).sub(new BN(1));
         let divConstant = maxNumber.div(this.difficulty);
@@ -76,7 +78,7 @@ class SkaleFaucet {
             let candidateHash = new BN(this.web3.utils.soliditySha3(candidate).slice(2), 16);
             let resultHash = nonceAddressXOR.xor(candidateHash);
             let externalGas = divConstant.div(resultHash).toNumber();
-            if (externalGas >= gasAmount) {
+            if (externalGas >= tx.gas) {
                 break;
             }
         }
