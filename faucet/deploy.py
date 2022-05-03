@@ -79,6 +79,11 @@ def run():
             'bin': faucet_meta.bytecode.hex()
         }, indent=2))
         print('Faucet abi is written in faucet.json')
+    with open('../package/assets/etherbase.json', 'w+') as f:
+        f.write(json.dumps({
+            'abi': etherbase.abi,
+            'address': etherbase.address
+        }, indent=2))
     link_to_etherbase(faucet.address)
     print(f'Faucet is linked to Etherbase')
 
