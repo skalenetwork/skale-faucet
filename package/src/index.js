@@ -40,8 +40,10 @@ class SkaleFaucet {
      */
     constructor(web3Provider, faucetAddress='', difficulty=1) {
         this.web3 = new Web3(web3Provider);
-//        this.contract = new this.web3.eth.Contract(faucetMeta.abi, faucetAddress);
         this.difficulty = new BN(difficulty);
+        if (faucetAddress !== '') {
+            this.contract = new this.web3.eth.Contract(faucetMeta.abi, faucetAddress);
+        }
     }
 
     async initialize(retrievedAmount, totalAmount, ownerKey) {
