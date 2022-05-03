@@ -24,7 +24,8 @@
 const BN = require("bn.js");
 const crypto = require("crypto");
 const Web3 = require('web3');
-const faucetAbi = require('../assets/faucet.json');
+const faucetMeta = require('../assets/faucet.json');
+const etherbaseMeta = require('../assets/etherbase.json');
 const { keccak256 } = require("@ethersproject/keccak256");
 
 class SkaleFaucet {
@@ -37,10 +38,47 @@ class SkaleFaucet {
      * @param {string|object} web3Provider - A URL of SKALE endpoint or one of the Web3 provider classes
      * @param {string} faucetAddress - SkaleFaucet contract address
      */
-    constructor(web3Provider, faucetAddress, difficulty=1) {
+    constructor(web3Provider, faucetAddress='', difficulty=1) {
         this.web3 = new Web3(web3Provider);
-        this.contract = new this.web3.eth.Contract(faucetAbi, faucetAddress);
+//        this.contract = new this.web3.eth.Contract(faucetMeta.abi, faucetAddress);
         this.difficulty = new BN(difficulty);
+    }
+
+    async initialize(retrievedAmount, totalAmount, ownerKey) {
+        let faucetContract = new this.web3.eth.Contract(faucetMeta.abi);
+        let deployTx = faucetContract.deploy({
+            data: faucetMeta.bin,
+            arguments: [retrievedAmount, totalAmount]
+        });
+
+        let account = this.web3.eth.accounts.privateKeyToAccount(ownerKey).address;
+        let tx = {
+            from: account,
+            data: deployTx.encodeABI(),
+            nonce: await this.web3.eth.getTransactionCount(account),
+            chainId: await this.web3.eth.net.getId(),
+            gas: await deployTx.estimateGas()
+        };
+        let signedTx = await this.web3.eth.accounts.signTransaction(tx, ownerKey);
+        let receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        faucetContract.options.address = receipt.contractAddress;
+
+        let etherbaseContract = new this.web3.eth.Contract(etherbaseMeta.abi, etherbaseMeta.address);
+        let role = await etherbaseContract.methods.ETHER_MANAGER_ROLE().call();
+        let txData = etherbaseContract.methods.grantRole(role, faucetContract.options.address);
+        tx = {
+            from: account,
+            to: etherbaseMeta.address,
+            data: txData.encodeABI(),
+            nonce: await this.web3.eth.getTransactionCount(account),
+            chainId: await this.web3.eth.net.getId(),
+            gas: await txData.estimateGas()
+        };
+        signedTx = await this.web3.eth.accounts.signTransaction(tx, ownerKey);
+        receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+        this.contract = faucetContract;
+        return faucetContract.address;
     }
 
     async retrieve(privateKey) {

@@ -57,7 +57,7 @@ def deploy_faucet():
     })
     tx_receipt = sign_and_send(tx)
     faucet_addr = tx_receipt['contractAddress']
-    return w3.eth.contract(abi=abi, address=faucet_addr)
+    return w3.eth.contract(abi=abi, address=faucet_addr), faucet
 
 
 def link_to_etherbase(faucet_addr):
@@ -71,10 +71,13 @@ def link_to_etherbase(faucet_addr):
 
 
 def run():
-    faucet = deploy_faucet()
+    faucet, faucet_meta = deploy_faucet()
     print(f'Faucet is deployed on {faucet.address}')
     with open('../package/assets/faucet.json', 'w+') as f:
-        f.write(json.dumps(faucet.abi, indent=2))
+        f.write(json.dumps({
+            'abi': faucet.abi,
+            'bin': faucet_meta.bytecode.hex()
+        }, indent=2))
         print('Faucet abi is written in faucet.json')
     link_to_etherbase(faucet.address)
     print(f'Faucet is linked to Etherbase')

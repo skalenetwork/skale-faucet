@@ -34,6 +34,12 @@ describe('Test SkaleFaucet', function () {
     });
 
     describe('Test constructor', function () {
+
+        it('initialize', async function () {
+            await faucet.initialize(1000, 10000, process.env.KEY);
+            assert.isTrue(await faucet.retrievedAmount() == 1000);
+        })
+
         it('should get money to account', async function () {
             let account = await faucet.web3.eth.accounts.create();
             await faucet.retrieve(account.privateKey);
