@@ -25,7 +25,7 @@ const BN = require("bn.js");
 const crypto = require("crypto");
 const Web3 = require('web3');
 const faucetAbi = require('../assets/faucet.json');
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const { keccak256 } = require("@ethersproject/keccak256");
 
 class SkaleFaucet {
 
@@ -58,14 +58,8 @@ class SkaleFaucet {
         let gas = await this.contract.methods.retrieve().estimateGas(tx);
         tx.gas = gas;
         await this._mineFreeGas(tx);
-        while(true) {
-            try {
-                let signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
-                return await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-            } catch (error) {
-                await sleep(1000);
-            }
-        }
+        let signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
+        return await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     }
 
     async retrievedAmount() {
@@ -81,15 +75,15 @@ class SkaleFaucet {
         let divConstant = maxNumber.div(this.difficulty);
         let candidate;
         while (true){
-            candidate = new BN(crypto.randomBytes(32).toString('hex'), 16);
-            let candidateHash = new BN(this.web3.utils.soliditySha3(candidate).slice(2), 16);
+            candidate = crypto.randomBytes(32);
+            let candidateHash = new BN(keccak256(candidate).slice(2), 16);
             let resultHash = nonceAddressXOR.xor(candidateHash);
             let externalGas = divConstant.div(resultHash).toNumber();
             if (externalGas >= tx.gas) {
                 break;
             }
         }
-        tx.gasPrice = candidate.toString();
+        tx.gasPrice = "0x" + candidate.toString('hex');
     }
 }
 
