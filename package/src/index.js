@@ -48,62 +48,54 @@ class SkaleFaucet {
 
     async initialize(retrievedAmount, totalAmount, ownerKey) {
         let faucetContract = new this.web3.eth.Contract(faucetMeta.abi);
-        let deployTx = faucetContract.deploy({
+        let deployContract = faucetContract.deploy({
             data: faucetMeta.bin,
             arguments: [retrievedAmount, totalAmount]
         });
-
-        let account = this.web3.eth.accounts.privateKeyToAccount(ownerKey).address;
-        let tx = {
-            from: account,
-            data: deployTx.encodeABI(),
-            nonce: await this.web3.eth.getTransactionCount(account),
-            chainId: await this.web3.eth.net.getId(),
-            gas: await deployTx.estimateGas()
-        };
-        let signedTx = await this.web3.eth.accounts.signTransaction(tx, ownerKey);
-        let receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        let receipt = await this._signAndSend(ownerKey, {method: deployContract});
         faucetContract.options.address = receipt.contractAddress;
 
         let etherbaseContract = new this.web3.eth.Contract(etherbaseMeta.abi, etherbaseMeta.address);
         let role = await etherbaseContract.methods.ETHER_MANAGER_ROLE().call();
         let txData = etherbaseContract.methods.grantRole(role, faucetContract.options.address);
-        tx = {
-            from: account,
-            to: etherbaseMeta.address,
-            data: txData.encodeABI(),
-            nonce: await this.web3.eth.getTransactionCount(account),
-            chainId: await this.web3.eth.net.getId(),
-            gas: await txData.estimateGas()
-        };
-        signedTx = await this.web3.eth.accounts.signTransaction(tx, ownerKey);
-        receipt = await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        await this._signAndSend(ownerKey, {method: txData, to: etherbaseMeta.address});
 
         this.contract = faucetContract;
         return faucetContract.address;
     }
 
     async retrieve(privateKey) {
-        let data = this.contract.methods.retrieve().encodeABI();
+        let method = this.contract.methods.retrieve();
+        return this._signAndSend(privateKey, {to: this.contract._address, method: method, pow: true});
+    }
+
+    async retrievedAmount() {
+        return await this.contract.methods.retrievedAmount().call();
+    }
+
+    async _signAndSend(privateKey, { method = '', to = '', pow = false }) {
         let account = this.web3.eth.accounts.privateKeyToAccount(privateKey).address;
         let nonce = await this.web3.eth.getTransactionCount(account);
         let chainId = await this.web3.eth.net.getId();
         let tx = {
             from: account,
-            data: data,
-            to: this.contract.address,
+            data: method.encodeABI(),
             nonce: nonce,
             chainId: chainId
         };
-        let gas = await this.contract.methods.retrieve().estimateGas(tx);
-        tx.gas = gas;
-        await this._mineFreeGas(tx);
+        if (to) {
+            tx.to = to
+        }
+        if (method) {
+            tx.data = method.encodeABI();
+            let gas = await method.estimateGas(tx);
+            tx.gas = gas;
+        }
+        if (pow) {
+            await this._mineFreeGas(tx);
+        }
         let signedTx = await this.web3.eth.accounts.signTransaction(tx, privateKey);
         return await this.web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    }
-
-    async retrievedAmount() {
-        return await this.contract.methods.retrievedAmount().call();
     }
 
     async _mineFreeGas(tx) {
