@@ -13,7 +13,7 @@ ENDPOINT=https://<YOUR_SKALE_ENDPOINT> PRIVATE_KEY=0x1234... python deploy.py
 Expected Result:
 
 ```
-Faucet is deployed on 0xFb7486694CC9800E1335Cb7dc129A4246Ef53bFD
+Faucet is deployed on 0xFb...
 Faucet abi is written in faucet.json
 Faucet is linked to Etherbase
 ```
@@ -23,5 +23,5 @@ Faucet is linked to Etherbase
 ```shell
 cd ../package
 yarn
-ENDPOINT=https://<YOUR_SKALE_ENDPOINT> PRIVATE_KEY=0x1234... FAUCET_ADDRESS=0xFb7486694CC9800E1335Cb7dc129A4246Ef53bFD yarn test
+ENDPOINT=https://<YOUR_SKALE_ENDPOINT> PRIVATE_KEY=0x1234... FAUCET_ADDRESS=0xFb... yarn test
 ```
