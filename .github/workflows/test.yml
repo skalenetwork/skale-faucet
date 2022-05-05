@@ -9,7 +9,7 @@ jobs:
         working-directory: package
     env:
       ENDPOINT: ${{ secrets.ENDPOINT }}
-      KEY: ${{ secrets.KEY }}
+      PRIVATE_KEY: ${{ secrets.KEY }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Node 14
