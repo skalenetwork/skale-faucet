@@ -42,7 +42,6 @@ describe('Test SkaleFaucet', function () {
 
         it('should get money to account', async function () {
             let account = await faucet.web3.eth.accounts.create();
-            console.log(account)
             await faucet.retrieve(account.privateKey);
             let newBalance = await faucet.web3.eth.getBalance(account.address);
             assert.isTrue(newBalance > 0, "balance didn't change");
