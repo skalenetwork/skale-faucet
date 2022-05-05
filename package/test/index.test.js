@@ -24,6 +24,8 @@ const SkaleFaucet = require('../src/index');
 var Web3HttpProvider = require('web3-providers-http');
 const chai = require('chai');
 const assert = chai.assert;
+chai.should();
+chai.use(require('chai-as-promised'));
 
 describe('Test SkaleFaucet', function () {
 
@@ -36,8 +38,8 @@ describe('Test SkaleFaucet', function () {
     describe('Test constructor', function () {
 
         it('initialize', async function () {
-            await faucet.initialize(1000, 10000, process.env.PRIVATE_KEY);
-            assert.isTrue(await faucet.retrievedAmount() == 1000);
+            await faucet.initialize(10 ** 10, 10 ** 11, process.env.PRIVATE_KEY);
+            assert.isTrue(await faucet.retrievedAmount() == 10 ** 10);
         })
 
         it('should get money to account', async function () {
@@ -45,6 +47,14 @@ describe('Test SkaleFaucet', function () {
             await faucet.retrieve(account.privateKey);
             let newBalance = await faucet.web3.eth.getBalance(account.address);
             assert.isTrue(newBalance > 0, "balance didn't change");
+
+            let method = faucet.contract.methods.retrieve();
+            await faucet._signAndSend(
+                account.privateKey,
+                {to: faucet.contract._address, method: method, gas:100000})
+                 .should
+                 .eventually
+                 .rejectedWith('Retrieve could be called once per day');
         });
     });
 });
