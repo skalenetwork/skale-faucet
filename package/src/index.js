@@ -73,7 +73,7 @@ class SkaleFaucet {
         return await this.contract.methods.retrievedAmount().call();
     }
 
-    async _signAndSend(privateKey, { method = '', to = '', pow = false }) {
+    async _signAndSend(privateKey, { method = '', to = '', pow = false, gas=null }) {
         let account = this.web3.eth.accounts.privateKeyToAccount(privateKey).address;
         let nonce = await this.web3.eth.getTransactionCount(account);
         let chainId = await this.web3.eth.net.getId();
@@ -88,7 +88,9 @@ class SkaleFaucet {
         }
         if (method) {
             tx.data = method.encodeABI();
-            let gas = await method.estimateGas(tx);
+            if (!gas) {
+                gas = await method.estimateGas(tx);
+            }
             tx.gas = gas;
         }
         if (pow) {
