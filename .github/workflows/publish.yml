@@ -25,7 +25,6 @@ jobs:
         run: |
           npm i
       - name: Set version and branch
-        working-directory: ../scripts
         run: |
           export BRANCH=${GITHUB_REF##*/}
           export VERSION=$(bash ./scripts/calculate_version.sh)
