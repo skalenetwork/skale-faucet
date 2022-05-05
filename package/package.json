@@ -27,5 +27,8 @@
   "author": "SKALE Labs and contributors",
   "publishConfig": {
     "access": "public"
+  },
+  "scripts": {
+    "test": "mocha test/index.test.js --timeout=60000"
   }
 }

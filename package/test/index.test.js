@@ -36,12 +36,13 @@ describe('Test SkaleFaucet', function () {
     describe('Test constructor', function () {
 
         it('initialize', async function () {
-            await faucet.initialize(1000, 10000, process.env.KEY);
+            await faucet.initialize(1000, 10000, process.env.PRIVATE_KEY);
             assert.isTrue(await faucet.retrievedAmount() == 1000);
         })
 
         it('should get money to account', async function () {
             let account = await faucet.web3.eth.accounts.create();
+            console.log(account)
             await faucet.retrieve(account.privateKey);
             let newBalance = await faucet.web3.eth.getBalance(account.address);
             assert.isTrue(newBalance > 0, "balance didn't change");
