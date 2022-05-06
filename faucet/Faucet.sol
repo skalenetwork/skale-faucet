@@ -25,13 +25,13 @@ contract Faucet is Ownable {
         totalFuelAmount = _fuelAmount;
     }
 
-    function retrieve() external {
-        require(msg.sender.balance < retrievedAmount, "Invalid receiver balance");
-        require(lastRetrieve[msg.sender] + timeDelta < block.timestamp, "Retrieve could be called once per day");
+    function retrieve(address receiver) external {
+        require(receiver.balance < retrievedAmount, "Invalid receiver balance");
+        require(lastRetrieve[receiver] + timeDelta < block.timestamp, "Retrieve could be called once per day");
         require(retrievedAmount < totalFuelAmount, "Not enough sFuel in Faucet");
-        uint amount = retrievedAmount - msg.sender.balance;
-        IEtherbase(etherbaseAddress).partiallyRetrieve(payable(msg.sender), amount);
+        uint amount = retrievedAmount - receiver.balance;
+        IEtherbase(etherbaseAddress).partiallyRetrieve(payable(receiver), amount);
         totalFuelAmount -= retrievedAmount;
-        lastRetrieve[msg.sender] = block.timestamp;
+        lastRetrieve[receiver] = block.timestamp;
     }
 }

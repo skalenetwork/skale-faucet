@@ -35,12 +35,11 @@ def generate_faucet_meta():
 
 
 def run():
-    faucet, faucet_meta = generate_faucet_meta()
-    print(f'Faucet is deployed on {faucet.address}')
+    faucet = generate_faucet_meta()
     with open('../package/assets/faucet.json', 'w+') as f:
         f.write(json.dumps({
             'abi': faucet.abi,
-            'bin': faucet_meta.bytecode.hex()
+            'bin': faucet.bytecode.hex()
         }, indent=2))
     with open('../package/assets/etherbase.json', 'w+') as f:
         f.write(json.dumps({
